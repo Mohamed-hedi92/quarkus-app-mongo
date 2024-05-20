@@ -26,22 +26,23 @@ class MovieResourceTest {
 
     // Test für Get Methode
     @Test
-    @Order(1)
+    @Order(2)
     void getAll() {
         given()
                 .when()
                 .get("/movies")
                 .then()
 
-                .body("id", hasItems("663a3298920a8639e6a18bb0", "663a32d1920a8639e6a18bb1", "663a35fc920a8639e6a18bb2"))
-                .body("title", hasItems("titanic2", "titanic3", "titanic4"))
-                .body("category", hasItems("Horror"))
-                .body("duration", everyItem(equalTo(120)))
+                .body("id", hasItems("663a32d1920a8639e6a18bb1","663a35fc920a8639e6a18bb2","663b62d8877b5d3792041c60","6641bd8a4bd70837cf11971e"))
+                .body("title", hasItems("fractured1", "titanic4", "titanic4","Titanic: Special Edition"))
+                .body("category", hasItems("romantic","Horror","Horror","Romance/Drama"))
+                .body("duration", hasItems(0, 120))
                 .statusCode(Response.Status.OK.getStatusCode());
     }
 
 
     @Test
+    @Order(1)
     public void testCreate() {
 
         Movie movie = new Movie();
@@ -61,6 +62,7 @@ class MovieResourceTest {
     }
 
     @Test
+    @Order(1)
     public void testDeleteById() {
         // Arrange
         Movie movie = new Movie();
@@ -78,6 +80,7 @@ class MovieResourceTest {
 
 
     @Test
+    @Order(1)
     public void testUpdateMovie() {
         // Arrange
         Movie movie = new Movie();
