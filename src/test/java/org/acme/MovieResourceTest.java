@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 
+/*
 class MovieResourceTest {
 
     @Inject
@@ -62,7 +63,7 @@ class MovieResourceTest {
     }
 
     @Test
-    @Order(1)
+    @Order(2)
     public void testDeleteById() {
         // Arrange
         Movie movie = new Movie();
@@ -107,3 +108,103 @@ class MovieResourceTest {
 }
 
 
+*/
+
+
+
+class MovieResourceTest {
+
+    @Inject
+    MovieRepository movieRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        movieRepository.deleteAll();
+    }
+
+    @Test
+    @Order(1)
+    public void testCreate() {
+        Movie movie = new Movie();
+        movie.setTitle("Titanic");
+        movie.setCategory("Romance");
+        movie.setDuration(120);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(movie)
+                .when()
+                .post("/movies")
+                .then()
+                .statusCode(201) // Erwarteter Statuscode CREATED
+                .body("title", equalTo("Titanic")); // Erwarteter Filmname
+    }
+
+    @Test
+    @Order(2)
+    void getAll() {
+        // Fügen Sie zwei Filme hinzu, um sicherzustellen, dass die Datenbank nicht leer ist
+        Movie movie1 = new Movie();
+        movie1.setTitle("fractured1");
+        movie1.setCategory("Horror");
+        movie1.setDuration(0);
+        movieRepository.persist(movie1);
+
+        Movie movie2 = new Movie();
+        movie2.setTitle("Titanic: Special Edition");
+        movie2.setCategory("Romance/Drama");
+        movie2.setDuration(120);
+        movieRepository.persist(movie2);
+
+        given()
+                .when()
+                .get("/movies")
+                .then()
+                .body("title", hasItems("fractured1", "Titanic: Special Edition"))
+                .body("category", hasItems("Horror", "Romance/Drama"))
+                .body("duration", hasItems(0, 120))
+                .statusCode(Response.Status.OK.getStatusCode());
+    }
+
+    @Test
+    @Order(3)
+    public void testDeleteById() {
+        Movie movie = new Movie();
+        movie.setTitle("Titanic");
+        movie.setCategory("Romance");
+        movie.setDuration(120);
+        movieRepository.persist(movie);
+
+        given()
+                .when()
+                .delete("/movies/" + movie.getId().toHexString())
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode()); // Erwarteter Statuscode NO_CONTENT
+
+        // Überprüfen, dass der Film tatsächlich gelöscht wurde
+        assertNull(movieRepository.findById(movie.getId()));
+    }
+
+    @Test
+    @Order(4)
+    public void testUpdateMovie() {
+        Movie movie = new Movie();
+        movie.setTitle("Titanic");
+        movie.setCategory("Romance");
+        movie.setDuration(120);
+        movieRepository.persist(movie);
+
+        String newTitle = "Titanic: Special Edition";
+        String newCategory = "Romance/Drama";
+
+        given()
+                .contentType("application/json")
+                .body("{\"title\":\"" + newTitle + "\", \"category\":\"" + newCategory + "\", \"duration\":120}")
+                .when()
+                .put("/movies/" + movie.getId().toHexString())
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode()) // Erwarteter Statuscode OK
+                .body("title", equalTo(newTitle)) // Überprüfung des neuen Titels
+                .body("category", equalTo(newCategory)); // Überprüfung der neuen Kategorie
+    }
+}
