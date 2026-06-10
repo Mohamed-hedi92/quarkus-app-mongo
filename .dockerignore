@@ -1,5 +1,10 @@
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+target/
+frontend/
+.git/
+*.md
+fix-files.js
+fix-imports.cjs
+k8s/
+docker-compose.yml
+.dockerignore
+Dockerfile

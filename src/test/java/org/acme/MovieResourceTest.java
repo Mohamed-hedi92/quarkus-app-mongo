@@ -1,210 +1,167 @@
 package org.acme;
+
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static com.google.common.util.concurrent.Runnables.doNothing;
 import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.when;
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.IsIterableContaining.hasItems;
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-@Tag("integration")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-
-/*
 class MovieResourceTest {
-
-    @Inject
-    MovieRepository movieRepository; // Du musst sicherstellen, dass movieRepository richtig konfiguriert ist.
-
-    // Test für Get Methode
-    @Test
-    @Order(2)
-    void getAll() {
-        given()
-                .when()
-                .get("/movies")
-                .then()
-
-                .body("id", hasItems("663a32d1920a8639e6a18bb1","663a35fc920a8639e6a18bb2","663b62d8877b5d3792041c60","6641bd8a4bd70837cf11971e"))
-                .body("title", hasItems("fractured1", "titanic4", "titanic4","Titanic: Special Edition"))
-                .body("category", hasItems("romantic","Horror","Horror","Romance/Drama"))
-                .body("duration", hasItems(0, 120))
-                .statusCode(Response.Status.OK.getStatusCode());
-    }
-
-
-    @Test
-    @Order(1)
-    public void testCreate() {
-
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(movie)
-                .when()
-                .post("/movies")
-                .then()
-                .statusCode(201) // Erwarteter Statuscode CREATED
-                .body("title", equalTo("Titanic")); // Erwarteter Filmname
-    }
-
-    @Test
-    @Order(2)
-    public void testDeleteById() {
-        // Arrange
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-        movieRepository.persist(movie);
-        // Act & Assert
-        given()
-                .when()
-                .delete("/movies/"+ movie.getId().toHexString())
-                .then()
-                .statusCode(Response.Status.NO_CONTENT.getStatusCode()); // Erwarteter Statuscode NO_CONTENT
-    }
-
-
-    @Test
-    @Order(1)
-    public void testUpdateMovie() {
-        // Arrange
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-        movieRepository.persist(movie);
-
-        // Neuer Titel und Kategorie für das Update
-        String newTitle = "Titanic: Special Edition";
-        String newCategory = "Romance/Drama";
-
-        // Act & Assert
-        given()
-                .contentType("application/json")
-                .body("{\"title\":\"" + newTitle + "\", \"category\":\"" + newCategory + "\", \"duration\":120}")
-                .when()
-                .put("/movies/"+ movie.getId().toHexString())
-                .then()
-                .statusCode(Response.Status.OK.getStatusCode()) // Erwarteter Statuscode OK
-                .body("title", equalTo(newTitle)) // Überprüfung des neuen Titels
-                .body("category", equalTo(newCategory)); // Überprüfung der neuen Kategorie
-    }
-}
-
-
-*/
-
-
-
-class MovieResourceTest {
-
-    @Inject
-    MovieRepository movieRepository;
 
     @BeforeEach
     void cleanDatabase() {
-        movieRepository.deleteAll();
+        Movie.deleteAll();
     }
 
     @Test
-    @Order(1)
-    public void testCreate() {
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-
+    void testCreateMovie() {
         given()
                 .contentType(ContentType.JSON)
-                .body(movie)
+                .body("{\"title\":\"Inception\",\"category\":\"Sci-Fi\",\"duration\":148}")
                 .when()
                 .post("/movies")
                 .then()
-                .statusCode(201) // Erwarteter Statuscode CREATED
-                .body("title", equalTo("Titanic")); // Erwarteter Filmname
+                .statusCode(201)
+                .body("title", is("Inception"),
+                        "category", is("Sci-Fi"),
+                        "duration", is(148));
     }
 
     @Test
-    @Order(2)
-    void getAll() {
-        // Fügen Sie zwei Filme hinzu, um sicherzustellen, dass die Datenbank nicht leer ist
-        Movie movie1 = new Movie();
-        movie1.setTitle("fractured1");
-        movie1.setCategory("Horror");
-        movie1.setDuration(0);
-        movieRepository.persist(movie1);
-
-        Movie movie2 = new Movie();
-        movie2.setTitle("Titanic: Special Edition");
-        movie2.setCategory("Romance/Drama");
-        movie2.setDuration(120);
-        movieRepository.persist(movie2);
+    void testGetAllMovies() {
+        createMovie("Inception", "Sci-Fi", 148);
+        createMovie("Titanic", "Romance", 195);
 
         given()
                 .when()
                 .get("/movies")
                 .then()
-                .body("title", hasItems("fractured1", "Titanic: Special Edition"))
-                .body("category", hasItems("Horror", "Romance/Drama"))
-                .body("duration", hasItems(0, 120))
-                .statusCode(Response.Status.OK.getStatusCode());
+                .statusCode(200)
+                .body("size()", is(2));
     }
 
     @Test
-    @Order(3)
-    public void testDeleteById() {
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-        movieRepository.persist(movie);
+    void testGetMovieById() {
+        Movie movie = createMovie("Inception", "Sci-Fi", 148);
 
         given()
                 .when()
-                .delete("/movies/" + movie.getId().toHexString())
+                .get("/movies/" + movie.id.toString())
                 .then()
-                .statusCode(Response.Status.NO_CONTENT.getStatusCode()); // Erwarteter Statuscode NO_CONTENT
-
-        // Überprüfen, dass der Film tatsächlich gelöscht wurde
-        assertNull(movieRepository.findById(movie.getId()));
+                .statusCode(200)
+                .body("title", is("Inception"));
     }
 
     @Test
-    @Order(4)
-    public void testUpdateMovie() {
-        Movie movie = new Movie();
-        movie.setTitle("Titanic");
-        movie.setCategory("Romance");
-        movie.setDuration(120);
-        movieRepository.persist(movie);
+    void testGetMovieByIdNotFound() {
+        given()
+                .when()
+                .get("/movies/" + new ObjectId().toString())
+                .then()
+                .statusCode(404);
+    }
 
-        String newTitle = "Titanic: Special Edition";
-        String newCategory = "Romance/Drama";
+    @Test
+    void testGetMovieByInvalidId() {
+        given()
+                .when()
+                .get("/movies/not-a-valid-id")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void testGetMovieByTitle() {
+        createMovie("Inception", "Sci-Fi", 148);
+        createMovie("Titanic", "Romance", 195);
 
         given()
-                .contentType("application/json")
-                .body("{\"title\":\"" + newTitle + "\", \"category\":\"" + newCategory + "\", \"duration\":120}")
                 .when()
-                .put("/movies/" + movie.getId().toHexString())
+                .get("/movies/title/Inception")
                 .then()
-                .statusCode(Response.Status.OK.getStatusCode()) // Erwarteter Statuscode OK
-                .body("title", equalTo(newTitle)) // Überprüfung des neuen Titels
-                .body("category", equalTo(newCategory)); // Überprüfung der neuen Kategorie
+                .statusCode(200)
+                .body("size()", is(1),
+                        "[0].title", is("Inception"));
+    }
+
+    @Test
+    void testGetMovieByCategory() {
+        createMovie("Inception", "Sci-Fi", 148);
+        createMovie("Matrix", "Sci-Fi", 136);
+        createMovie("Titanic", "Romance", 195);
+
+        given()
+                .when()
+                .get("/movies/category/Sci-Fi")
+                .then()
+                .statusCode(200)
+                .body("size()", is(2));
+    }
+
+    @Test
+    void testUpdateMovie() {
+        Movie movie = createMovie("Inception", "Sci-Fi", 148);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"title\":\"Inception Updated\",\"category\":\"Thriller\",\"duration\":150}")
+                .when()
+                .put("/movies/" + movie.id.toString())
+                .then()
+                .statusCode(200)
+                .body("title", is("Inception Updated"),
+                        "category", is("Thriller"),
+                        "duration", is(150));
+    }
+
+    @Test
+    void testUpdateMovieNotFound() {
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"title\":\"Updated\",\"category\":\"Drama\",\"duration\":100}")
+                .when()
+                .put("/movies/" + new ObjectId().toString())
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void testDeleteMovie() {
+        Movie movie = createMovie("Inception", "Sci-Fi", 148);
+
+        given()
+                .when()
+                .delete("/movies/" + movie.id.toString())
+                .then()
+                .statusCode(204);
+
+        given()
+                .when()
+                .get("/movies")
+                .then()
+                .statusCode(200)
+                .body("size()", is(0));
+    }
+
+    @Test
+    void testDeleteMovieNotFound() {
+        given()
+                .when()
+                .delete("/movies/" + new ObjectId().toString())
+                .then()
+                .statusCode(404);
+    }
+
+    private Movie createMovie(String title, String category, int duration) {
+        Movie movie = new Movie();
+        movie.title = title;
+        movie.category = category;
+        movie.duration = duration;
+        movie.persist();
+        return movie;
     }
 }

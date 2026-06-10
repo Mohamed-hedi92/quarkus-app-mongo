@@ -1,55 +1,22 @@
 package org.acme;
 
+import io.quarkus.mongodb.panache.PanacheMongoEntity;
+import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.types.ObjectId;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+@MongoEntity(collection = "movies")
+public class Movie extends PanacheMongoEntity {
 
-@Entity
-public class Movie  {
-    @Id
-    @GeneratedValue
-    public ObjectId id;
-
-    @Column(length = 100)
     public String title;
-
-    @Column(length = 200)
     public String category;
-
     public int duration;
 
-    public ObjectId getId() {
-        return id;
+    public Movie() {
     }
 
-    public void setId(ObjectId id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
+    public Movie(String title, String category, int duration) {
         this.title = title;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
         this.category = category;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
         this.duration = duration;
     }
 }

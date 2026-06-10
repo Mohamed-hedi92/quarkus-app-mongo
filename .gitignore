@@ -1,43 +1,30 @@
-#Maven
+# Java
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-release.properties
-.flattened-pom.xml
+*.class
+*.jar
+*.war
 
-# Eclipse
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
 .project
 .classpath
-.settings/
-bin/
 
-# IntelliJ
-.idea
-*.ipr
-*.iml
-*.iws
-
-# NetBeans
-nb-configuration.xml
-
-# Visual Studio Code
-.vscode
-.factorypath
-
-# OSX
+# OS
 .DS_Store
+Thumbs.db
 
-# Vim
-*.swp
-*.swo
+# Node
+frontend/node_modules/
+frontend/dist/
 
-# patch
-*.orig
-*.rej
+# Docker
+*.env.local
 
-# Local environment
-.env
-
-# Plugin directory
-/.quarkus/cli/plugins/
+# Fix scripts
+fix-*.cjs
+fix-*.js
+dir
+echo
